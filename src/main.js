@@ -582,7 +582,7 @@ function startup() {
 	registerEvents();
 	drawBoard();
 	if (!load()) {
-		loadBoardFromSeed("hello");
+		loadBoardFromSeed(state.seed);
 	}
 }
 
