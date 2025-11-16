@@ -73,7 +73,7 @@ body {
 	justify-content: space-around;
 	padding: 20px;
 	width: 380px;
-	height: 380px;
+	height: 420px;
 	visibility: hidden;
 	opacity: 0;
 	transition-property: "opacity";
@@ -100,6 +100,20 @@ body {
 	text-wrap-mode: nowrap;
 }
 
+#results h2 {
+	font-weight: bold;
+	color: var(--white);
+	text-align: center;
+	font-size: 1.5rem;
+	margin: 0px;
+	height: 30px;
+	width: 35%;
+	display: flex;
+	justify-content: space-around;
+	text-wrap-mode: nowrap;
+	margin-bottom: 30px;
+}
+
 #results .close {
 	position: absolute;
 	right: 20px;
@@ -124,6 +138,24 @@ body {
 	background: #31c3e7;
 	color: var(--white);
 	font-size: 2rem;
+	font-weight: bold;
+	font-family: Arial, Helvetica, sans-serif;
+	border: none;
+	cursor: pointer;
+	user-select: none;
+	margin-top: 30px;
+}
+
+#randomize {
+	width: 200px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	border-radius: 10px;
+	background: var(--locked);
+	color: var(--keyboard);
+	font-size: 1.2rem;
 	font-weight: bold;
 	font-family: Arial, Helvetica, sans-serif;
 	border: none;

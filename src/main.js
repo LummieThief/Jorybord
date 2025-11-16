@@ -30,12 +30,14 @@ const frequencies = [
 	0.2722, //Z
 ];
 
-const state = {
-	seed: "hello",
+let state = {
+	seed: "",
+	customSeed: false,
 	score: 0,
+	moves: 0,
 	emojiGrid: Array(gridSize)
 		.fill()
-		.map(() => Array(6).fill("⬛")),
+		.map(() => Array(6).fill(emojis[0])),
 	finished: false,
 	dragging: false,
 	selecting: false,
@@ -47,14 +49,15 @@ const state = {
 };
 
 const saveState = {
-	seed: "hello",
+	seed: "",
 	score: 0,
+	moves: 0,
 	letterGrid: Array(gridSize)
 		.fill()
 		.map(() => Array(6).fill("")),
 	emojiGrid: Array(gridSize)
 		.fill()
-		.map(() => Array(6).fill("⬛")),
+		.map(() => Array(6).fill(emojis[0])),
 	finished: false,
 };
 
@@ -101,16 +104,16 @@ function loadBoardFromLetterGrid(letterGrid, emojiGrid) {
 			if (l.toUpperCase() === l) box.classList.add("locked");
 
 			const emoji = emojiGrid[row][col];
-			if (emoji !== "⬛") {
+			if (emoji !== emojis[0]) {
 				box.classList.add("scored");
 			}
-			if (emoji === "🟩") {
+			if (emoji === emojis[3]) {
 				box.classList.add("length3");
-			} else if (emoji === "🟦") {
+			} else if (emoji === emojis[4]) {
 				box.classList.add("length4");
-			} else if (emoji === "🟥") {
+			} else if (emoji === emojis[5]) {
 				box.classList.add("length5");
-			} else if (emoji === "🟨") {
+			} else if (emoji === emojis[6]) {
 				box.classList.add("length6");
 			}
 		}
@@ -399,6 +402,9 @@ function inputLetter(letter) {
 		selectedBox.textContent = letter;
 		selectedBox.classList.add("locked");
 
+		if (!state.moves) state.moves = 1;
+		else state.moves++;
+
 		for (let i = 0; i < state.highlightedBoxIndices.length; i++) {
 			const box = getBoxFromIndex(state.highlightedBoxIndices[i]);
 			if (!box.classList.contains("scored")) {
@@ -412,6 +418,15 @@ function inputLetter(letter) {
 
 		updateScore();
 		save();
+		let solved = true;
+		for (let row = 0; row < gridSize; row++) {
+			for (let col = 0; col < gridSize; col++) {
+				if (state.emojiGrid[row][col] === emojis[0]) {
+					solved = false;
+				}
+			}
+		}
+		if (solved) endGame();
 	}
 
 	highlightBoxes([]);
@@ -424,6 +439,9 @@ function updateScore() {
 	for (let i = 0; i < scores.length; i++) {
 		scores[i].textContent = state.score;
 	}
+
+	const moves = document.getElementById("moves");
+	moves.textContent = state.moves;
 }
 
 function isLetter(key) {
@@ -471,6 +489,8 @@ function binarySearch(dict, word) {
 }
 
 function save() {
+	if (state.usingCustomSeed) return;
+
 	for (let row = 0; row < gridSize; row++) {
 		for (let col = 0; col < gridSize; col++) {
 			const box = getBoxFromIndex([col, row]);
@@ -485,11 +505,14 @@ function save() {
 	saveState.score = state.score;
 	saveState.emojiGrid = state.emojiGrid;
 	saveState.seed = state.seed;
+	saveState.moves = state.moves;
 
 	localStorage.setItem("state", JSON.stringify(saveState));
 }
 
 function load() {
+	if (state.usingCustomSeed) return false;
+
 	const savedString = localStorage.getItem("state");
 	// If there is no saved state return
 	if (!savedString) {
@@ -506,6 +529,7 @@ function load() {
 	state.score = parsedState.score;
 	state.emojiGrid = parsedState.emojiGrid;
 	state.seed = parsedState.seed;
+	state.moves = parsedState.moves;
 
 	if (parsedState.finished) {
 		endGame(false);
@@ -518,7 +542,9 @@ function load() {
 }
 
 function copyResults() {
-	let copyText = `Jorybord\n${state.seed}\nScore: ${state.score}\n`;
+	let seed = state.seed;
+	if (state.usingCustomSeed) seed = `Custom seed: ${seed}`;
+	let copyText = `Jorybord\n${seed}\nScore: ${state.score}\nMoves: ${state.moves}\n`;
 	//let copyText = "Score: " + state.score + ;
 	for (let row = 0; row < gridSize; row++) {
 		for (let col = 0; col < gridSize; col++) {
@@ -569,6 +595,39 @@ function closeConfirm() {
 	registerEvents();
 }
 
+function restartWithSeed(newSeed = "") {
+	if (newSeed === "") {
+		newSeed = Math.floor(Math.random() * 100000);
+		console.log("random seed = " + newSeed);
+	}
+	state = {
+		seed: newSeed,
+		usingCustomSeed: true,
+		score: 0,
+		emojiGrid: Array(gridSize)
+			.fill()
+			.map(() => Array(6).fill("⬛")),
+		finished: false,
+		dragging: false,
+		selecting: false,
+		dragStartBox: [0, 0],
+		dragEndBox: [0, 0],
+		highlightedBoxIndices: [],
+		selectedBoxIndex: undefined,
+		selectedBoxLetter: "",
+	};
+	deregisterEvents();
+	const board = document.getElementById("board");
+	let child = board.lastElementChild;
+	while (child) {
+		board.removeChild(child);
+		child = board.lastElementChild;
+		if (child.id === "highlighter") break;
+	}
+	closeResults();
+	startup();
+}
+
 function startup() {
 	const date = new Date();
 	const dateString = date.toLocaleDateString("en-US", {
@@ -577,13 +636,14 @@ function startup() {
 		day: "numeric",
 		year: "numeric",
 	});
-	state.seed = dateString;
+	if (state.seed === "") state.seed = dateString;
 
 	registerEvents();
 	drawBoard();
 	if (!load()) {
 		loadBoardFromSeed(state.seed);
 	}
+	updateScore();
 }
 
 startup();
