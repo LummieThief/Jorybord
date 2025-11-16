@@ -399,21 +399,3 @@ body {
 .box.locked.selectable {
 	cursor: not-allowed;
 }
-
-/*
-.flipping {
-	animation: flip 1s ease 2 alternate;
-}
-
-@keyframes flip {
-	0% {
-		transform: scaleX(1);
-	}
-	30% {
-		transform: scaleX(0);
-	}
-	60% {
-		transform: scaleX(1);
-	}
-}
-	*/
