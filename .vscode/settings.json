@@ -1,0 +1,6 @@
+{
+  "js/ts.implicitProjectConfig.checkJs": false,
+  "js/ts.implicitProjectConfig.strict": false,
+  "js/ts.implicitProjectConfig.strictFunctionTypes": false,
+  "js/ts.implicitProjectConfig.strictNullChecks": false
+}

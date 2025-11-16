@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Jorybord</title>
+		<link rel="stylesheet" href="./src/styles.css" />
+		<script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
+		<script src="./src/dictionary.js" defer></script>
+		<script src="./src/main.js" defer></script>
+	</head>
+	<body>
+		<div id="title">JORYBORD</div>
+		<div id="game">
+			<div id="board">
+				<div id="highlighter"></div>
+			</div>
+		</div>
+
+		<div id="keyboard">
+			<div class="keyboard-row">
+				<button data-key="q">q</button>
+				<button data-key="w">w</button>
+				<button data-key="e">e</button>
+				<button data-key="r">r</button>
+				<button data-key="t">t</button>
+				<button data-key="y">y</button>
+				<button data-key="u">u</button>
+				<button data-key="i">i</button>
+				<button data-key="o">o</button>
+				<button data-key="p">p</button>
+			</div>
+			<div class="keyboard-row">
+				<button data-key="a">a</button>
+				<button data-key="s">s</button>
+				<button data-key="d">d</button>
+				<button data-key="f">f</button>
+				<button data-key="g">g</button>
+				<button data-key="h">h</button>
+				<button data-key="j">j</button>
+				<button data-key="k">k</button>
+				<button data-key="l">l</button>
+			</div>
+			<div class="keyboard-row">
+				<button data-key="z">z</button>
+				<button data-key="x">x</button>
+				<button data-key="c">c</button>
+				<button data-key="v">v</button>
+				<button data-key="b">b</button>
+				<button data-key="n">n</button>
+				<button data-key="m">m</button>
+			</div>
+		</div>
+		<div id="tutorial">
+			<p id="tutorial-prompt">Scroll down for tutorial</p>
+			<br /><br />
+			<p>Click and drag to make a selection. Selections must be at least 3 letters long.</p>
+			<img src="images\tutorial-1.png" width="372" height="372" />
+			<p>Click to change a single letter in your selection and turn it into a valid word.</p>
+			<img src="images\tutorial-2.png" width="372" height="372" />
+			<p>
+				Each letter in your word will give you a number of points equal to<br />the length
+				of the word, so the word "BOTH" here is worth 16 points.
+			</p>
+			<img src="images\tutorial-3.png" width="372" height="372" />
+			<p>
+				Letters can only be modified once, so we couldn't turn this 'B' into an<br />'M' to
+				spell "MOM", but we could turn the 'M' into an 'O' to spell "BOO"
+			</p>
+			<img src="images\tutorial-4.png" width="372" height="372" />
+			<p>
+				You can only get points from each letter once, so the word "BOO" here only gives
+				6<br />points instead of 9.The color under a letter tells you how many points it was
+				worth.
+			</p>
+			<img src="images\tutorial-5.png" width="372" height="372" />
+			<p>Try to set yourself up to spell long words for big points!</p>
+			<img src="images\tutorial-6.png" width="372" height="372" />
+			<p>
+				When you fill the whole grid or decide you're out of moves, you<br />can see your
+				final score and share how you did with your friends!
+			</p>
+			<img src="images\tutorial-7.png" width="495" height="495" />
+		</div>
+		<div id="stats">
+			<div id="score-container">
+				Score:
+				<div class="score">0</div>
+			</div>
+			<button type="button" onclick="doneButton()" id="done">I'm done</button>
+		</div>
+		<div id="results">
+			<button type="button" onclick="closeResults()" class="close">X</button>
+			<h1>
+				Final Score:
+				<div class="score">0</div>
+			</h1>
+			<div id="emojis">
+				<p>🟨🟦🟦🟦🟦🟥</p>
+				<p>🟥🟥🟥🟥🟩🟥</p>
+				<p>🟨🟨🟨🟨🟩🟨</p>
+				<p>🟦🟦🟥🟩🟩🟥</p>
+				<p>🟥🟥🟥🟩🟩🟩</p>
+				<p>🟨🟨🟥🟨🟩🟨</p>
+			</div>
+			<button type="button" onclick="copyResults()" id="share">
+				Share
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+					<path
+						d="M384 64a64 64 0 0 0-64 64 64 64 0 0 0 1.1 11.3l-146.3 73.2A64 64 0 0 0 128 192a64 64 0 0 0-64 64 64 64 0 0 0 64 64 64 64 0 0 0 46.8-20.5L321 372.7a64 64 0 0 0-1 11.3 64 64 0 0 0 64 64 64 64 0 0 0 64-64 64 64 0 0 0-64-64 64 64 0 0 0-46.8 20.5L191 267.4a64 64 0 0 0 1-11.4 64 64 0 0 0-1.1-11.4l146.3-73.1A64 64 0 0 0 384 192a64 64 0 0 0 64-64 64 64 0 0 0-64-64z"
+						fill-opacity="1"
+					/>
+				</svg>
+			</button>
+		</div>
+		<div id="confirm">
+			<div>Are you sure you're done playing?</div>
+			<div id="confirm-buttons">
+				<button class="good-confirm" type="button" onclick="closeConfirm()">
+					Keep playing
+				</button>
+				<button class="bad-confirm" type="button" onclick="endGame()">End game</button>
+			</div>
+		</div>
+	</body>
+</html>

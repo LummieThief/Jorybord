@@ -1,0 +1,158 @@
+html,
+body {
+	background: var(--black);
+}
+
+:root {
+	--black: #121213;
+	--white: #f8f8f8;
+	--keyboard: #818384;
+	--outline: #3a3a3c;
+	--highlighted: #3a3a3c;
+	--locked: #0a4704;
+	--scored: #309227;
+	--ol: 4px;
+	--nol: -4px;
+}
+
+#game {
+	display: grid;
+	place-items: center;
+	width: 100%;
+	height: 600px;
+}
+
+#scoreboard {
+	background: var(--black);
+	border: 4px solid var(--outline);
+	border-radius: 6px;
+	color: var(--keyboard);
+	position: absolute;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 1.3rem;
+	font-weight: bold;
+	display: grid;
+	border-radius: 5px;
+	padding: 20px;
+	width: 380px;
+	height: 560px;
+	left: 20px;
+	top: 100px;
+}
+/*
+#done {
+	background: var(--outline);
+	color: var(--keyboard);
+	position: absolute;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 1.3rem;
+	font-weight: bold;
+	display: grid;
+	place-items: center;
+	border-radius: 5px;
+	width: 100px;
+	height: 30px;
+	right: -180px;
+}
+	*/
+
+#keyboard {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.keyboard-row {
+	display: flex;
+	align-self: center;
+	gap: 7px;
+}
+
+.keyboard-row button {
+	background: var(--keyboard);
+	width: 45px;
+	height: 60px;
+	border-radius: 5px;
+	font-family: Arial, Helvetica, sans-serif;
+	color: var(--white);
+	font-size: 1.3rem;
+	font-weight: bold;
+	text-transform: uppercase;
+	border: none;
+	cursor: pointer;
+	user-select: none;
+}
+
+#board {
+	display: grid;
+	grid-template-rows: repeat(6, auto);
+	grid-template-columns: repeat(6, auto);
+	cursor: pointer;
+	border: 4px solid var(--outline);
+	border-radius: 6px;
+}
+
+.box {
+	width: 60px;
+	height: 60px;
+	margin: 4px;
+	color: var(--keyboard);
+	text-transform: uppercase;
+	display: grid;
+	place-items: center;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 2.4rem;
+	font-weight: bold;
+	user-select: none;
+}
+
+.box.highlighted {
+	background: var(--highlighted);
+	color: var(--white);
+	border: none;
+	padding: 4px;
+	margin: 0px;
+}
+
+.box.outline-F {
+	box-shadow: inset var(--ol) var(--ol) var(--white), inset var(--nol) var(--nol) var(--white);
+}
+.box.outline-L {
+	box-shadow: inset var(--ol) var(--ol) var(--white), inset 0px var(--nol) var(--white);
+}
+.box.outline-T {
+	box-shadow: inset var(--ol) var(--ol) var(--white), inset var(--nol) 0px var(--white);
+}
+.box.outline-R {
+	box-shadow: inset var(--nol) var(--ol) var(--white), inset 0px var(--nol) var(--white);
+}
+.box.outline-B {
+	box-shadow: inset var(--ol) var(--nol) var(--white), inset var(--nol) 0px var(--white);
+}
+.box.outline-H {
+	box-shadow: inset 0px var(--ol) var(--white), inset 0px var(--nol) var(--white);
+}
+.box.outline-V {
+	box-shadow: inset var(--ol) 0px var(--white), inset var(--nol) 0px var(--white);
+}
+
+.box.scored {
+	background: var(--scored);
+	color: var(--white);
+	border: none;
+	padding: 4px;
+	margin: 0px;
+}
+
+.box.locked {
+	background: var(--locked);
+}
+
+.box.selectable {
+	cursor: text;
+}
+
+.box.locked.selectable {
+	cursor: not-allowed;
+}
