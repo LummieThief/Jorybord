@@ -35,6 +35,8 @@ let state = {
 	customSeed: false,
 	score: 0,
 	moves: 0,
+	history: [],
+	viewingHistoryIndex: null,
 	emojiGrid: Array(gridSize)
 		.fill()
 		.map(() => Array(6).fill(emojis[0])),
@@ -186,6 +188,7 @@ function onResize(event) {
 }
 
 function onDragStart(event) {
+	if (state.viewingHistoryIndex !== null) return;
 	// If we clicked a button return
 	if (event.target.getAttribute("data-key")) return;
 
@@ -386,6 +389,7 @@ function selectBox(boxIndex) {
 }
 
 function inputLetter(letter) {
+	if (state.viewingHistoryIndex !== null) return;
 	if (!state.selectedBoxIndex) return;
 
 	let word = "";
@@ -397,10 +401,22 @@ function inputLetter(letter) {
 	}
 
 	if (isValidWord(word)) {
+		// Record previous letter before change
+		const prevLetter = state.selectedBoxLetter;
 		state.selectedBoxLetter = letter;
 		const selectedBox = getBoxFromIndex(state.selectedBoxIndex);
 		selectedBox.textContent = letter;
 		selectedBox.classList.add("locked");
+
+		const move = {
+			changedBox: [state.selectedBoxIndex[0], state.selectedBoxIndex[1]],
+			previousLetter: prevLetter,
+			newLetter: letter,
+			positions: state.highlightedBoxIndices.map((p) => [p[0], p[1]]),
+			length: word.length,
+			newlyScored: [],
+			word: word,
+		};
 
 		if (!state.moves) state.moves = 1;
 		else state.moves++;
@@ -413,11 +429,16 @@ function inputLetter(letter) {
 				const boxIndex = state.highlightedBoxIndices[i];
 				state.emojiGrid[boxIndex[1]][boxIndex[0]] = emojis[word.length];
 				state.score += word.length;
+				move.newlyScored.push([boxIndex[0], boxIndex[1]]);
 			}
 		}
 
+		// Push to history after applying
+		state.history.push(move);
+
 		updateScore();
 		save();
+		renderHistory();
 		let solved = true;
 		for (let row = 0; row < gridSize; row++) {
 			for (let col = 0; col < gridSize; col++) {
@@ -432,6 +453,299 @@ function inputLetter(letter) {
 	highlightBoxes([]);
 	selectBox(undefined);
 	state.selecting = false;
+}
+
+// Undo the last accepted move
+function undoLastMove() {
+	if (state.viewingHistoryIndex !== null) return;
+	if (!state.history || state.history.length === 0) return;
+
+	// If results are open (finished), close and resume
+	if (state.finished) {
+		closeResults();
+		state.finished = false;
+		document.getElementById("done").textContent = "I'm done";
+		registerEvents();
+	}
+
+	const last = state.history.pop();
+
+	// Revert changed letter and unlock
+	const box = getBoxFromIndex(last.changedBox);
+	box.textContent = last.previousLetter;
+	box.classList.remove("locked");
+
+	// Revert newly scored tiles
+	for (let i = 0; i < last.newlyScored.length; i++) {
+		const [x, y] = last.newlyScored[i];
+		const b = getBoxFromIndex([x, y]);
+		b.classList.remove("scored");
+		b.classList.remove("length3");
+		b.classList.remove("length4");
+		b.classList.remove("length5");
+		b.classList.remove("length6");
+		state.emojiGrid[y][x] = emojis[0];
+	}
+
+	// Adjust score and moves
+	state.score -= last.length * last.newlyScored.length;
+	state.moves = Math.max(0, (state.moves || 1) - 1);
+
+	updateScore();
+	save();
+	renderHistory();
+
+	// Clear any selection/highlights
+	highlightBoxes([]);
+	selectBox(undefined);
+}
+
+// Reset the current puzzle to the initial seed state
+function resetGame() {
+	if (state.viewingHistoryIndex !== null) return;
+	// Clear history and state fields but keep current seed
+	state.score = 0;
+	state.moves = 0;
+	state.history = [];
+	state.finished = false;
+	state.emojiGrid = Array(gridSize)
+		.fill()
+		.map(() => Array(6).fill(emojis[0]));
+
+	// Clear selection/highlights
+	highlightBoxes([]);
+	selectBox(undefined);
+	state.selecting = false;
+
+	// Reload letters from seed and clear classes
+	loadBoardFromSeed(state.seed);
+	for (let row = 0; row < gridSize; row++) {
+		for (let col = 0; col < gridSize; col++) {
+			const box = getBoxFromIndex([col, row]);
+			box.classList.remove("locked");
+			box.classList.remove("scored");
+			box.classList.remove("length3");
+			box.classList.remove("length4");
+			box.classList.remove("length5");
+			box.classList.remove("length6");
+		}
+	}
+
+	// Update UI and save
+	updateScore();
+	save();
+	registerEvents();
+	renderHistory();
+}
+
+// Render the moves history panel
+function renderHistory() {
+	const list = document.getElementById("moves-list");
+	if (!list) return;
+	list.innerHTML = "";
+	for (let i = 0; i < state.history.length; i++) {
+		const m = state.history[i];
+		const entry = document.createElement("div");
+		entry.className = "move-entry";
+		// Add length class for styling outline color
+		entry.classList.add(`l${m.length}`);
+
+		// Left: index badge
+		const idx = document.createElement("div");
+		idx.className = "move-index";
+		idx.textContent = `#${i + 1}`;
+
+		// Middle: details
+		const middle = document.createElement("div");
+		middle.className = "move-main";
+
+		// Build before -> after display with highlighted changed character
+		const change = document.createElement("span");
+		change.className = "move-change";
+
+		const before = document.createElement("span");
+		before.className = "move-word-before";
+
+		const after = document.createElement("span");
+		after.className = "move-word-after";
+
+		// Uppercase new word
+		const newWord = m.word.toUpperCase();
+
+		// Find index of changed position within the positions array
+		const [cx, cy] = m.changedBox;
+		let changedIndex = 0;
+		for (let k = 0; k < m.positions.length; k++) {
+			if (m.positions[k][0] === cx && m.positions[k][1] === cy) {
+				changedIndex = k;
+				break;
+			}
+		}
+
+		// Construct before/after text with per-character spans
+		for (let k = 0; k < newWord.length; k++) {
+			const chNew = document.createElement("span");
+			chNew.textContent = newWord[k];
+			if (k === changedIndex) chNew.className = "changed-new";
+			after.appendChild(chNew);
+
+			const chBefore = document.createElement("span");
+			// previousLetter may be empty; fall back to the new char if so
+			const prevChar = (k === changedIndex && m.previousLetter && m.previousLetter.length) ? m.previousLetter.toUpperCase() : newWord[k];
+			chBefore.textContent = prevChar;
+			if (k === changedIndex) chBefore.className = "changed-old";
+			before.appendChild(chBefore);
+		}
+
+		// Separator arrow
+		const arrow = document.createElement("span");
+		arrow.className = "move-arrow";
+		arrow.textContent = " → ";
+
+		change.appendChild(before);
+		change.appendChild(arrow);
+		change.appendChild(after);
+
+		middle.appendChild(change);
+
+		entry.appendChild(idx);
+		entry.appendChild(middle);
+
+		// Make entry clickable to view that state
+		entry.style.cursor = "pointer";
+		entry.onclick = () => loadHistoryState(i);
+
+		// Highlight current viewing state
+		if (state.viewingHistoryIndex === i) {
+			entry.classList.add("viewing");
+		}
+
+		list.appendChild(entry);
+	}
+}
+
+// Load a specific history state onto the board
+function loadHistoryState(index) {
+	state.viewingHistoryIndex = index;
+	
+	// Clear the board
+	for (let row = 0; row < gridSize; row++) {
+		for (let col = 0; col < gridSize; col++) {
+			const box = getBoxFromIndex([col, row]);
+			box.classList.remove("locked");
+			box.classList.remove("scored");
+			box.classList.remove("length3");
+			box.classList.remove("length4");
+			box.classList.remove("length5");
+			box.classList.remove("length6");
+		}
+	}
+	
+	// Load initial board
+	loadBoardFromSeed(state.seed);
+	
+	// Replay moves up to this index
+	for (let i = 0; i <= index; i++) {
+		const move = state.history[i];
+		const box = getBoxFromIndex(move.changedBox);
+		box.textContent = move.newLetter;
+		box.classList.add("locked");
+		
+		// Apply scoring
+		for (let j = 0; j < move.positions.length; j++) {
+			const [x, y] = move.positions[j];
+			const b = getBoxFromIndex([x, y]);
+			if (move.newlyScored.some(([nx, ny]) => nx === x && ny === y)) {
+				b.classList.add("scored");
+				b.classList.add(`length${move.length}`);
+			}
+		}
+	}
+	
+	// Highlight the word from the current viewing move
+	const currentMove = state.history[index];
+	const horizontal = currentMove.positions.length === 1 || 
+		currentMove.positions[0][0] !== currentMove.positions[1][0];
+	highlightBoxes(currentMove.positions, horizontal);
+	
+	// Show restore button
+	updateRestoreButton();
+	renderHistory();
+}
+
+// Restore board to the latest state
+function restoreBoard() {
+	state.viewingHistoryIndex = null;
+	
+	// Clear the board
+	for (let row = 0; row < gridSize; row++) {
+		for (let col = 0; col < gridSize; col++) {
+			const box = getBoxFromIndex([col, row]);
+			box.classList.remove("locked");
+			box.classList.remove("scored");
+			box.classList.remove("length3");
+			box.classList.remove("length4");
+			box.classList.remove("length5");
+			box.classList.remove("length6");
+		}
+	}
+	
+	// Load initial board
+	loadBoardFromSeed(state.seed);
+	
+	// Replay all moves
+	for (let i = 0; i < state.history.length; i++) {
+		const move = state.history[i];
+		const box = getBoxFromIndex(move.changedBox);
+		box.textContent = move.newLetter;
+		box.classList.add("locked");
+		
+		// Apply scoring
+		for (let j = 0; j < move.positions.length; j++) {
+			const [x, y] = move.positions[j];
+			const b = getBoxFromIndex([x, y]);
+			if (move.newlyScored.some(([nx, ny]) => nx === x && ny === y)) {
+				b.classList.add("scored");
+				b.classList.add(`length${move.length}`);
+			}
+		}
+	}
+	
+	// Clear any highlights
+	highlightBoxes([]);
+	
+	updateRestoreButton();
+	renderHistory();
+}
+
+// Update restore button visibility
+function updateRestoreButton() {
+	const btn = document.getElementById("restore-board");
+	if (!btn) return;
+	
+	if (state.viewingHistoryIndex !== null) {
+		btn.style.display = "block";
+	} else {
+		btn.style.display = "none";
+	}
+}
+
+// Lookup feature: validate arbitrary word within allowed length
+function lookupWord() {
+	const input = document.getElementById('lookup-input');
+	const status = document.getElementById('lookup-status');
+	if (!input || !status) return;
+	// Sanitize and force uppercase
+	let raw = input.value.toUpperCase().replace(/[^A-Z]/g, "");
+	if (input.value !== raw) input.value = raw;
+	status.className = '';
+	if (raw.length < 3 || raw.length > 6) {
+		status.textContent = '';
+		return;
+	}
+	const ok = isValidWord(raw.toLowerCase());
+	status.classList.add(ok ? 'valid' : 'invalid');
+	status.textContent = ok ? 'VALID' : 'INVALID';
 }
 
 function updateScore() {
@@ -574,6 +888,7 @@ function closeResults() {
 }
 
 function doneButton() {
+	if (state.viewingHistoryIndex !== null) return;
 	if (state.finished) {
 		openResults();
 	} else {
@@ -604,6 +919,8 @@ function restartWithSeed(newSeed = "") {
 		seed: newSeed,
 		usingCustomSeed: true,
 		score: 0,
+		moves: 0,
+		history: [],
 		emojiGrid: Array(gridSize)
 			.fill()
 			.map(() => Array(6).fill("⬛")),
@@ -644,6 +961,11 @@ function startup() {
 		loadBoardFromSeed(state.seed);
 	}
 	updateScore();
+	renderHistory();
+	updateRestoreButton();
+	
+	const li = document.getElementById('lookup-input');
+	if (li) li.addEventListener('input', lookupWord);
 }
 
 startup();

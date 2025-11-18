@@ -245,12 +245,170 @@ body {
 	left: 50%;
 	transform: translate(200px, 130px);
 	top: 0px;
-	width: 200px;
-	height: 100px;
+	width: 260px;
+	height: 260px;
 	font-family: Arial, Helvetica, sans-serif;
 	font-weight: bold;
 	color: var(--white);
 	font-size: 2rem;
+}
+
+/* Moves panel */
+
+#moves-panel {
+	position: absolute;
+	right: 50%;
+	transform: translate(-200px, 0);
+	top: 170px;
+	width: 260px;
+	height: 280px;
+	background: var(--black);
+	border: 4px solid var(--outline);
+	border-radius: 12px;
+	color: var(--white);
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 0.95rem;
+	display: flex;
+	flex-direction: column;
+	z-index: 3;
+}
+
+#moves-header {
+	padding: 8px 12px;
+	color: var(--keyboard);
+	font-weight: bold;
+	border-bottom: 2px solid var(--outline);
+	background: var(--black);
+	border-radius: 8px 8px 0 0;
+}
+
+#moves-list {
+	flex: 1;
+	overflow-y: auto;
+	padding: 8px 12px;
+	/* Scrollbar styling */
+	scrollbar-width: thin;                 /* Firefox */
+	scrollbar-color: var(--outline) transparent; /* Firefox */
+}
+
+.move-entry {
+	padding: 8px 10px;
+	margin-bottom: 8px;
+	background: var(--board);
+	border: 2px solid var(--outline);
+	border-radius: 8px;
+	color: var(--white);
+	font-size: 0.95rem;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 10px;
+}
+
+.move-index { 
+	color: var(--keyboard);
+	font-weight: bold;
+	min-width: 38px;
+}
+
+.move-main {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: 1;
+}
+
+.move-word {
+	font-weight: bold;
+	letter-spacing: 0.04em;
+	color: var(--white);
+}
+
+.move-change {
+	color: var(--white);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 1;
+}
+
+.move-word-before { 
+	display: inline-flex; 
+	gap: 0; 
+	color: var(--white);
+	min-width: 72px;
+	justify-content: flex-end;
+}
+
+.move-arrow { 
+	color: var(--white); 
+	flex-shrink: 0;
+}
+
+.move-word-after { 
+	display: inline-flex; 
+	gap: 0; 
+	color: var(--white);
+	min-width: 72px;
+}
+
+.move-word-before span, .move-word-after span { display: inline-block; }
+.changed-old { text-decoration: underline; text-decoration-color: var(--length5); text-underline-offset: 3px; }
+.changed-new { text-decoration: underline; text-decoration-color: var(--length3); text-underline-offset: 3px; }
+
+.move-coords {
+	color: var(--keyboard);
+	font-size: 0.8rem;
+}
+
+/* Color the entry outline by word length */
+.move-entry.l3 { border-color: var(--length3); }
+.move-entry.l4 { border-color: var(--length4); }
+.move-entry.l5 { border-color: var(--length5); }
+.move-entry.l6 { border-color: var(--length6); }
+
+/* Highlight currently viewing state */
+.move-entry.viewing {
+	background: var(--locked);
+	box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+/* Restore board button */
+#restore-board {
+	position: absolute;
+	right: 50%;
+	transform: translate(-200px, 0);
+	top: 460px;
+	width: 268px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 10px;
+	color: var(--white);
+	background: var(--length4);
+	font-size: 1.1rem;
+	font-weight: bold;
+	font-family: Arial, Helvetica, sans-serif;
+	border: none;
+	cursor: pointer;
+	user-select: none;
+	z-index: 3;
+}
+
+/* Chrome/Edge WebKit scrollbar styling */
+#moves-list::-webkit-scrollbar {
+	width: 10px;
+}
+#moves-list::-webkit-scrollbar-track {
+	background: transparent;
+}
+#moves-list::-webkit-scrollbar-thumb {
+	background: var(--outline);
+	border-radius: 8px;
+}
+#moves-list::-webkit-scrollbar-thumb:hover {
+	background: var(--keyboard);
 }
 
 #done {
@@ -271,7 +429,92 @@ body {
 	position: absolute;
 	left: 50%;
 	transform: translate(-60%, 0%);
+	top: 100px; /* move below Undo/Reset */
 	margin: 10px;
+}
+#lookup-container {
+	position: absolute;
+	left: 10px;
+	top: 160px; /* moved down slightly from 150px */
+	width: 240px;
+	font-size: 0.85rem;
+	font-weight: normal;
+	color: var(--keyboard);
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+#lookup-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 0px;
+	margin-top: 4px;
+}
+
+#lookup-input {
+	flex: 1;
+	padding: 6px 8px;
+	border-radius: 6px;
+	border: 2px solid var(--outline);
+	background: var(--board);
+	color: var(--white);
+	font-size: 0.95rem;
+	font-family: Arial, Helvetica, sans-serif;
+	text-transform: uppercase;
+}
+
+#lookup-input:focus {
+	outline: none;
+	border-color: var(--length4);
+}
+
+#lookup-status {
+	margin-top: 6px;
+	min-height: 20px;
+	font-size: 0.8rem;
+}
+
+#lookup-status.valid {
+	color: var(--length3); /* green for valid */
+}
+
+#lookup-status.invalid {
+	color: var(--length5); /* red for invalid */
+}
+
+#lookup-status.range {
+	color: var(--length6);
+}
+
+/* Consistent buttons for Undo/Reset */
+#undo,
+#reset {
+	width: 120px;
+	height: 30px;
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	border-radius: 10px;
+	color: var(--keyboard);
+	background: var(--locked);
+	font-size: 1rem;
+	font-weight: bold;
+	font-family: Arial, Helvetica, sans-serif;
+	border: none;
+	cursor: pointer;
+	user-select: none;
+	position: absolute;
+}
+
+/* Arrange buttons vertically with consistent spacing */
+#undo {
+	left: 10px;
+	top: 60px;
+}
+
+#reset {
+	right: 10px;
+	top: 60px;
 }
 
 #score-container {
