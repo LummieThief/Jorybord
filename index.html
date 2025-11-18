@@ -89,8 +89,24 @@
 				Score:
 				<div class="score">0</div>
 			</div>
+			<button type="button" onclick="undoLastMove()" id="undo" title="Undo">Undo</button>
+			<button type="button" onclick="resetGame()" id="reset" title="Reset">Reset</button>
 			<button type="button" onclick="doneButton()" id="done">I'm done</button>
+			<div id="lookup-container">
+				<label for="lookup-input">Word Lookup:</label>
+				<div id="lookup-row">
+					<input id="lookup-input" type="text" maxlength="6" placeholder="Enter word" />
+				</div>
+				<div id="lookup-status"></div>
+			</div>
 		</div>
+
+		<!-- Moves history panel -->
+		<div id="moves-panel">
+			<div id="moves-header">Moves</div>
+			<div id="moves-list"></div>
+		</div>
+		<button type="button" onclick="restoreBoard()" id="restore-board" style="display: none;">Restore Board</button>
 		<div id="results">
 			<button type="button" onclick="closeResults()" class="close">X</button>
 			<h1>
